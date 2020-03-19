@@ -1,0 +1,24 @@
+{
+    "name": "speauty/yto-sdk",
+    "description": "圆通对接PHP版SDK",
+    "type": "library",
+    "require": {
+        "php": "^7.1",
+        "ext-libxml": "*",
+        "guzzlehttp/guzzle": "~6.3"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "speauty",
+            "email": "speauty@163.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "YTOSdk\\": "src/"
+        }
+    }
+}
+
