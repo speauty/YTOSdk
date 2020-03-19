@@ -9,6 +9,8 @@ declare(strict_types=1);
 namespace YTOSdk;
 
 use GuzzleHttp\Client;
+use YTOSdk\Lib\FF;
+
 
 class YTO
 {
@@ -33,7 +35,7 @@ class YTO
         'S07' => '系统异常，请重试',
         'S08' => '非法的电商平台',
     ];
-    private $reasonMapelEctronic = [
+    private $reasonMapElectronic = [
         'S01' => '订单报文不合法',
         'S02' => '数字签名不匹配',
         'S03' => '没有剩余单号',
@@ -69,7 +71,7 @@ class YTO
     private function switchReasonMap():void
     {
         if ($this->isElectronic) $this->type = 'offline';
-        $this->currentReasonMap = $this->isElectronic?$this->reasonMapelEctronic:$this->reasonMapGeneral;
+        $this->currentReasonMap = $this->isElectronic?$this->reasonMapElectronic:$this->reasonMapGeneral;
     }
 
     private function verifyConf()
@@ -84,31 +86,10 @@ class YTO
         foreach ($checkList as $k => $v) if ($k) $this->exception($v);
     }
 
-    public function xml2Arr($xmlStr)
-    {
-        libxml_disable_entity_loader(true);
-        return json_decode(json_encode(simplexml_load_string($xmlStr, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
-    }
-
-    private function arr2Xml(array $data, string $parentKey = ''):string
-    {
-        $xml = '';
-        foreach ($data as $key => $val) {
-            if (is_array($val)) {
-                if ($parentKey === 'items') $key = 'item';
-                $val = $this->arr2Xml($val, $key);
-                $xml.="<{$key}>{$val}</{$key}>";
-            } else {
-                $xml.="<{$key}>{$val}</{$key}>";
-            }
-        }
-        return $xml;
-    }
-
     private function buildXmlData():void
     {
         $this->verifyConf();
-        $this->xmlStr = $this->arr2Xml($this->sourceData);
+        $this->xmlStr = FF::arr2Xml($this->sourceData);
     }
 
     public function __construct(?array $conf)
@@ -153,7 +134,7 @@ class YTO
             return $result;
         }
         $this->initResponse = $response->getBody()->getContents();
-        $bodyContent = $this->xml2Arr($this->initResponse);
+        $bodyContent = FF::xml2Arr($this->initResponse);
         if (!$bodyContent) {
             $result['msg'] = '未知错误';
             return $result;
@@ -166,18 +147,6 @@ class YTO
             $result['msg'] = $this->currentReasonMap[$bodyContent['reason']??'']??'未知错误编码: '.$bodyContent['reason'];
         }
         return $result;
-    }
-
-    private function smallCamel2Snake(string $str):string
-    {
-        return strtolower(preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $str));
-    }
-
-    private function snake2SmallCamel(string $str):string
-    {
-        return preg_replace_callback('/_+([a-z])/',function($matches){
-            return strtoupper($matches[1]);
-        },$str);
     }
 
     public function getResult(bool $flagOnlyResult = false):array
@@ -214,7 +183,7 @@ class YTO
             'orderNo', 'sender', 'receiver', 'products'
         ];
         foreach ($mustDataIdx as $v) {
-            $v = $this->smallCamel2Snake($v);
+            $v = FF::smallCamel2Snake($v);
             if (!isset($mustData[$v]) || !$mustData[$v]) {
                 $this->exception("the {$v} is empty");
             }
@@ -224,7 +193,7 @@ class YTO
         ];
 
         foreach ($addressIdx as $v) {
-            $v = $this->smallCamel2Snake($v);
+            $v = FF::smallCamel2Snake($v);
             if (!isset($mustData['sender'][$v]) || !$mustData['sender'][$v]) {
                 $this->exception("the sender.{$v} is empty");
             }
@@ -234,7 +203,7 @@ class YTO
         }
         $productIdx = ['itemName', 'number', 'itemValue'];
         foreach ($productIdx as $v) {
-            $v = $this->smallCamel2Snake($v);
+            $v = FF::smallCamel2Snake($v);
             foreach ($mustData['products'] as $pv) {
                 if (!isset($pv[$v]) || !$pv[$v]) {
                     $this->exception("the products.{$v} is empty");
@@ -273,7 +242,7 @@ class YTO
             'remark' => $extData['remark']??''
         ];
         foreach ($addressTempLate as $k => $v) {
-            $keyMap = $this->smallCamel2Snake($k);
+            $keyMap = FF::smallCamel2Snake($k);
             $data['sender'][$k] = $mustData['sender'][$keyMap]??$addressTempLate[$k];
             $data['receiver'][$k] = $mustData['receiver'][$keyMap]??$addressTempLate[$k];
         }
