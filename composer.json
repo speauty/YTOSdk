@@ -18,8 +18,8 @@
     "autoload": {
         "psr-4": {
             "YTOSdk\\": "src/",
-            "YTOSdk\\Lib": "src/lib/",
-            "YTOSdk\\Lib\\Service": "src/lib/service/"
+            "YTOSdk\\Lib\\": "src/lib/",
+            "YTOSdk\\Lib\\Service\\": "src/lib/service/"
         }
     }
 }
