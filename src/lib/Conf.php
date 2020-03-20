@@ -13,12 +13,21 @@ class Conf
 {
     private $customerCode = '';
     private $verifyCode = '';
+    private $appKey = '';
+    private $method = '';
+    private $v = '1';
     private $baseUri = 'http://opentestapi.yto.net.cn';
     private $logisticProviderID = 'YTO';
 
     public function __construct(?array $conf)
     {
-        $this->setConf($conf);
+        $conf && self::setConf($conf);
+    }
+
+    public function setProperty(string $name, $data):void
+    {
+        if (!property_exists($this, $name)) Exception::throw('the property '.$name.' not found, please check now.');
+        $this->$name = $data;
     }
 
     public function setConf(?array $conf):void
@@ -38,6 +47,7 @@ class Conf
 
     public function getConf(string $confName):string
     {
+        $confName = FF::snake2SmallCamel($confName);
         return property_exists($this, $confName)?$this->$confName:'';
     }
 }

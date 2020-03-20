@@ -28,6 +28,13 @@ class FF
         },$str);
     }
 
+    static public function snake2BigCamel(string $str):string
+    {
+        return ucfirst(preg_replace_callback('/_+([a-z])/',function($matches){
+            return strtoupper($matches[1]);
+        },$str));
+    }
+
     static public function xml2Arr($xmlStr)
     {
         libxml_disable_entity_loader(true);

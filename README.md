@@ -20,20 +20,8 @@ use YTOSdk\YTO;
 $conf = [
     // 客户编码/渠道编码/客户标识 好像都是这个
     'customer_code' => 'TEST',
-    // 合作伙伴标识
-    'partner_id' => '123456',
-    // uri地址
-    // 订单创建 /service/order_create/v1/oksM7N
-    // 订单取消 service/order_cancel/v1/oksM7N
-    // 走件流程查询 /service/waybill_query/v1/oksM7N
-    // 电子面单下单 /service/e_order_create/v1/oksM7N
-    'base_uri' => 'http://opentestapi.yto.net.cn',
-    // 请求地址路径
-    'path' => '/service/order_cancel/v1/oksM7N',
-    // 订单类型[online:在线下单，offline:线下下单] 这个需要补充一下, 电子面单那里必须为线下
-    'type' => 'online',
-    // 是否为电子面单, 默认为false, 主要控制错误提示的输出
-    'is_electronic' => false
+    // 合作伙伴标识/验证码
+    'verify_code' => '123456',
 ];
 // 然后就是获得一个实例, 下面要对接具体接口功能
 $yto = new YTO($conf);

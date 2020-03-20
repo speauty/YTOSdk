@@ -11,16 +11,23 @@ namespace YTOSdk\Lib;
 
 class Data
 {
-    private $sourceData = null;
+    static private $sourceData = null;
+    static private $xmlDataStr = '';
+    static private $initRequestData = '';
+    static private $initResponseData = '';
+    static private $result = '';
+    static private $tmpQueryData = null;
 
     static private $fieldsMap = [
         'customerCode' => 'customerCode',
-        'verifyCode' => 'verifyCode',
+        'clientId' => 'customerCode',
         'clientID' => 'customerCode',
         'customerId' => 'customerCode',
         'tradeNo' => 'customerCode',
         'user_id' => 'customerCode',
-        'secret_key' => 'customerCode',
+        'secret_key' => 'verifyCode',
+        'verifyCode' => 'verifyCode',
+        'partnerId' => 'verifyCode',
     ];
 
     static private $reasonMapGeneral = [
@@ -44,20 +51,15 @@ class Data
         'S09' => '数据入库异常',
     ];
 
-    public function __construct(?array $data)
-    {
-        $this->setData(setData);
-    }
-
-    public function setData(?array $data):void
+    static public function setData(string $name, $data):void
     {
         if (!$data) Exception::throw('the data is empty, please check now.');
-        $this->sourceData = $data;
+        self::$$name = $data;
     }
 
-    public function getData():?array
+    static public function getData(string $name)
     {
-        return $this->sourceData;
+        return self::$$name;
     }
 
     static public function getFieldMappingName(string $name):string
@@ -69,5 +71,70 @@ class Data
     {
         $default = '未知异常编码: '.$code;
         return $isElectronic?self::$reasonMapElectronic[$code]??$default:self::$reasonMapGeneral[$code]??$default;
+    }
+
+    static public function getXmlData(?array $data = null):string
+    {
+        if (!self::$xmlDataStr) {
+            self::$xmlDataStr = FF::arr2Xml($data?:self::$sourceData);
+        }
+        return self::$xmlDataStr;
+    }
+
+    static public function buildDataDigest(Conf $conf):string
+    {
+        return base64_encode(md5(self::getXmlData().$conf->getConf(self::$fieldsMap['partnerId']), true));
+    }
+
+    static public function buildSign(Conf $conf):string
+    {
+        $secretKey = $conf->getConf(Data::getFieldMappingName('secret_key'));
+        $data = [
+            'user_id' => $conf->getConf(Data::getFieldMappingName('user_id')),
+            'app_key' => $conf->getConf('app_key'),
+            'format' => 'XML',
+            'method' => $conf->getConf('method'),
+//            'timestamp' => date('Y-m-d H:i:s'),
+            'timestamp' => '2016-6-1 13:14:35',
+            'v' => $conf->getConf('v'),
+        ];
+        ksort($data);
+
+        self::$tmpQueryData = $data;
+        $tmpStr = '';
+        foreach (self::$tmpQueryData as $k => $v) {
+            $tmpStr .= $k.$v;
+        }
+        Exception::throw('正在开发中');
+        // 49582BD86763825DB93D14B407F32D3B
+        var_dump(strtoupper(md5('1QLlIZapp_keysF1JznformatXMLmethodyto.Marketing.TransportPricetimestamp2020-03-20 17:25:54user_idYTOTESTv1')));
+
+        die();
+        return strtoupper(md5($secretKey.$tmpStr));
+    }
+
+    static public function result(\GuzzleHttp\Psr7\Response $response, bool $isElectronic = false):?array
+    {
+        $result = ['state' => false, 'msg' => '', 'data' => null];
+        if ($response->getStatusCode() != 200) {
+            $result['msg'] = $response->getReasonPhrase();
+            return $result;
+        }
+        self::$initResponseData = $response->getBody()->getContents();
+        var_dump(self::$initResponseData );
+        die();
+        $bodyContent = FF::xml2Arr(self::$initResponseData);
+        if (!$bodyContent) {
+            $result['msg'] = '未知错误';
+            return $result;
+        }
+        if ($bodyContent['success'] == 'true') {
+            $result['state'] = true;
+            unset($bodyContent['success']);
+            $result['data'] = $bodyContent;
+        } else {
+            $result['msg'] = Data::getReasonByCode($bodyContent['reason']??'', $isElectronic);
+        }
+        return $result;
     }
 }
