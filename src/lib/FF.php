@@ -38,7 +38,7 @@ class FF
     static public function xml2Arr($xmlStr)
     {
         libxml_disable_entity_loader(true);
-        return json_decode(json_encode(simplexml_load_string($xmlStr, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
+        return @json_decode(json_encode(simplexml_load_string($xmlStr, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
     }
 
     static public function arr2Xml(array $data, string $parentKey = ''):string

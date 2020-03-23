@@ -6,15 +6,15 @@
  * Created: 2020/3/20 09:15:32
  */
 declare(strict_types=1);
-require_once __DIR__."/../vendor/autoload.php";
+require_once "./vendor/autoload.php";
 
 use YTOSdk\YTO;
 
 $conf = [
-    'customer_code' => 'yto_user',
-    'verify_code' => '123456',
-    'app_key' => 'ABCDEF',
-    'v' => '1.01'
+    'customer_code' => 'YTOTEST',
+    'verify_code' => '1QLlIZ',
+    'app_key' => 'sF1Jzn',
+    'v' => '1'
 ];
 $p = new YTO($conf);
 $result = false;
@@ -63,5 +63,9 @@ $data = [
     'goods_width' => '',
     'goods_height' => ''
 ];
-$result = $p->queryTransportPrice($data);
+//$result = $p->queryTransportPrice($data);
+//$result = $p->queryTrace('1111111111');
+//$result = $p->queryProvinceOfCity('2110101');
+//$result = $p->queryCity('3450902');
+//$result = $p->queryNetWorkService('775003');
 var_dump($result);

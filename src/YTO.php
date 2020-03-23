@@ -79,7 +79,7 @@ class YTO
             ],
             'form_params' => $data
         ]);
-        Data::setData('result', Data::result($result));
+        Data::setData('result', Data::queryResult($result));
         Data::setData('initRequestData', http_build_query($data));
         return $this;
     }
@@ -201,8 +201,7 @@ class YTO
         return $this->quickOrderGeneral($mustData, $extData, true);
     }
 
-    // yto.Marketing.TransportPrice
-    public function queryTransportPrice(array $mustData)
+    public function queryTransportPrice(array $mustData):array
     {
         $data = [
             'ufinterface' => [
@@ -225,10 +224,74 @@ class YTO
             if (!isset($mustData[$tmpIdx])) {
                 Exception::throw("the data {$tmpIdx} not set, please check now");
             }
-            $v = $mustData[$tmpIdx];
+            $v = $mustData[$tmpIdx]??'';
         }
         unset($v);
         $this->conf->setProperty('method', 'yto.Marketing.TransportPrice');
-        $this->setData($data)->queryRequest('/service/charge_query/v1/oksM7N ')->getResult(false);
+        return $this->setData($data)->queryRequest('/service/charge_query/v1/oksM7N')->getResult(true);
+    }
+
+    public function queryTrace(string $mailNo):array
+    {
+        if (!$mailNo) Exception::throw('the mailNo not found');
+        $data = [
+            'ufinterface' => [
+                'Result' => [
+                    'WaybillCode' => [
+                        'Number' => $mailNo
+                    ]
+                ]
+            ]
+        ];
+        $this->conf->setProperty('method', 'yto.Marketing.WaybillTrace');
+        return $this->setData($data)->queryRequest('/service/waybill_query/v1/oksM7N')->getResult(true);
+    }
+
+    public function queryProvinceOfCity(string $provinceCode):array
+    {
+        if (!$provinceCode) Exception::throw('the province code not found');
+        $data = [
+            'ufinterface' => [
+                'Result' => [
+                    'ProvinceCode' => [
+                        'Code' => $provinceCode
+                    ]
+                ]
+            ]
+        ];
+        $this->conf->setProperty('method', 'yto.BaseData.ProvinceOfCity');
+        return $this->setData($data)->queryRequest('/service/subcity_query/v1/oksM7N')->getResult(true);
+    }
+
+    public function queryCity(string $cityCode):array
+    {
+        if (!$cityCode) Exception::throw('the city code not found');
+        $data = [
+            'ufinterface' => [
+                'Result' => [
+                    'CityCode' => [
+                        'Code' => $cityCode
+                    ]
+                ]
+            ]
+        ];
+        $this->conf->setProperty('method', 'yto.BaseData.CityOfStation');
+        return $this->setData($data)->queryRequest('/service/subcity_query/v1/oksM7N')->getResult(true);
+    }
+
+    public function queryNetWorkService(string $stationCode):array
+    {
+        if (!$stationCode) Exception::throw('the station code not found');
+        $data = [
+            'ufinterface' => [
+                'Result' => [
+                    'StationCode' => [
+                        'Code' => $stationCode
+                    ]
+                ]
+            ]
+        ];
+        $this->conf->setProperty('method', 'yto.BaseData.StationInfo');
+        return $this->setData($data)->queryRequest('/service/newtwork_service_query/v1/oksM7N')->getResult(true);
     }
 }

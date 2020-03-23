@@ -94,23 +94,17 @@ class Data
             'app_key' => $conf->getConf('app_key'),
             'format' => 'XML',
             'method' => $conf->getConf('method'),
-//            'timestamp' => date('Y-m-d H:i:s'),
-            'timestamp' => '2016-6-1 13:14:35',
+            'timestamp' => date('Y-m-d H:i:s'),
             'v' => $conf->getConf('v'),
         ];
         ksort($data);
 
         self::$tmpQueryData = $data;
-        $tmpStr = '';
+        $tmpStr = $secretKey;
         foreach (self::$tmpQueryData as $k => $v) {
             $tmpStr .= $k.$v;
         }
-        Exception::throw('正在开发中');
-        // 49582BD86763825DB93D14B407F32D3B
-        var_dump(strtoupper(md5('1QLlIZapp_keysF1JznformatXMLmethodyto.Marketing.TransportPricetimestamp2020-03-20 17:25:54user_idYTOTESTv1')));
-
-        die();
-        return strtoupper(md5($secretKey.$tmpStr));
+        return strtoupper(md5($tmpStr));
     }
 
     static public function result(\GuzzleHttp\Psr7\Response $response, bool $isElectronic = false):?array
@@ -121,8 +115,6 @@ class Data
             return $result;
         }
         self::$initResponseData = $response->getBody()->getContents();
-        var_dump(self::$initResponseData );
-        die();
         $bodyContent = FF::xml2Arr(self::$initResponseData);
         if (!$bodyContent) {
             $result['msg'] = '未知错误';
@@ -135,6 +127,56 @@ class Data
         } else {
             $result['msg'] = Data::getReasonByCode($bodyContent['reason']??'', $isElectronic);
         }
+        return $result;
+    }
+
+    static public function queryResult(\GuzzleHttp\Psr7\Response $response, bool $isElectronic = false):?array
+    {
+        $result = ['state' => false, 'msg' => '', 'data' => null];
+        if ($response->getStatusCode() != 200) {
+            $result['msg'] = $response->getReasonPhrase();
+            return $result;
+        }
+        self::$initResponseData = $response->getBody()->getContents();
+        $bodyContent = FF::xml2Arr(self::$initResponseData);
+        if (!$bodyContent) {
+            if ((int)self::$initResponseData > 0) {
+                $result['state'] = true;
+                $result['data'] = self::$initResponseData;
+                return $result;
+            }
+            return $result;
+        }
+        if (isset($bodyContent['Station_Code'])) {
+            $result['state'] = true;
+            $result['data'] = $bodyContent;
+            return $result;
+        }
+        if (isset($bodyContent['Result']) && $bodyContent['Result']) {
+            if (isset($bodyContent['Result']['WaybillProcessInfo'])) {
+                $result['state'] = true;
+                $result['data'] = $bodyContent['Result']['WaybillProcessInfo'];
+            }
+            if (isset($bodyContent['Result']['CityInfo'])) {
+                $result['state'] = true;
+                $result['data'] = $bodyContent['Result']['CityInfo'];
+            }
+            if (isset($bodyContent['Result']['StationNameInfo'])) {
+                $result['state'] = true;
+                $result['data'] = $bodyContent['Result']['StationNameInfo'];
+            }
+
+        }
+        if (isset($bodyContent['success'])) {
+            if ($bodyContent['success'] == 'true') {
+                $result['state'] = true;
+                unset($bodyContent['success']);
+                $result['data'] = $bodyContent;
+            } else {
+                $result['msg'] = Data::getReasonByCode($bodyContent['reason']??'', $isElectronic);
+            }
+        }
+
         return $result;
     }
 }
